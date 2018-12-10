@@ -1,5 +1,5 @@
 {
-  "name": "whois",
+  "name": "whois-info",
   "version": "1.0.0",
   "description": "whois lookup",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/index-js/whois-js.git"
+    "url": "git+https://github.com/index-js/whois-info.git"
   },
   "keywords": [
     "whois",
@@ -16,10 +16,10 @@
     "ip",
     "lookup"
   ],
-  "author": "Yanglin",
+  "author": "Yanglin(mail@yanglin.me)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/index-js/whois-js/issues"
+    "url": "https://github.com/index-js/whois-info/issues"
   },
-  "homepage": "https://github.com/index-js/whois-js#readme"
+  "homepage": "https://github.com/index-js/whois-info#readme"
 }
