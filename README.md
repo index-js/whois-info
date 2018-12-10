@@ -1,2 +1,3 @@
-# whois-js
+# Whois-js
+
 Whois lookup

@@ -1,0 +1,25 @@
+{
+  "name": "whois",
+  "version": "1.0.0",
+  "description": "whois lookup",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/index-js/whois-js.git"
+  },
+  "keywords": [
+    "whois",
+    "domain",
+    "ip",
+    "lookup"
+  ],
+  "author": "Yanglin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/index-js/whois-js/issues"
+  },
+  "homepage": "https://github.com/index-js/whois-js#readme"
+}
