@@ -1,8 +1,9 @@
 /*
-* Whois-JS
+* Whois-Info
 * Yanglin <Mail@yanglin.me>
 * https://github.com/FurqanSoftware/node-whois
 * https://github.com/imnotjames/whois-servers
+* https://www.iana.org/domains/root/db
 */
 
 const net = require('net')
@@ -25,7 +26,14 @@ const lookup = domain => {
   } else if (net.isIP(domain) !== 0) {
     return _lookup(ipHost, domain)
   } else {
-    let server = findServer(domain)
+    let server = null
+    let tld = domain
+    while (tld && !server) {
+      if (Servers[tld] && Servers[tld][0]) {
+        server = Servers[tld][0]
+      }
+      tld = tld.replace(/^.+?(\.|$)/, '')
+    }
     if (!server) {
       throw new Error('No whois server is known')
     } else {
@@ -34,19 +42,8 @@ const lookup = domain => {
   }
 }
 
-const findServer = domain => {
-  let server
-  let tld = domain
-
-  while (tld && !server) {
-    server = Servers[tld]
-    tld = tld.replace(/^.+?(\.|$)/, '')
-  }
-
-  return server
-}
-
 const _lookup = (server, domain) => {
+  domain = domain.toLowerCase()
   const query = domain + '\r\n'
 
   if (typeof server === 'string') {
@@ -65,10 +62,40 @@ const _lookup = (server, domain) => {
     
     let data = ''
     socket.on('data', chunk => data += chunk.replace(/\r/g, ''))
-    socket.on('close', () => resolve(data))
+    socket.once('close', () => resolve(parseRaw(data, domain)))
     socket.on('error', error => reject(error))
     socket.on('timeout', () => socket.destroy())
   })
+}
+
+const parseRaw = (data, domain) => {
+  const split = data.split(/\r?\n/)
+  const startReg = new RegExp(domain, 'i')
+  const endReg = /^\s*[#%>-]/
+
+  let start = null
+  let end = null
+  let parsed = []
+
+  for (let index = 0; index < split.length; index ++) {
+    let line = split[index]
+    // Start with domain name
+    if (start == null) {
+      if (startReg.test(line)) start = index
+    }
+    if (start != null && index >= start) {
+      // End with notice
+      if (end == null && endReg.test(line)) {
+        break
+      }
+      parsed.push(line.trim())
+    }
+  }
+  // Start with multi-line
+  if (parsed.length && parsed[0].toLowerCase() === domain) {
+    parsed.unshift(split[start - 1].trim())
+  }
+  return parsed.join('\n')
 }
 
 module.exports = { lookup, _lookup }
