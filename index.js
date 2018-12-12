@@ -7,7 +7,7 @@
 */
 
 const net = require('net')
-const Servers = require('./servers.json')
+const TLD_SERVER = require('./tld.json')
 
 const timeout = 30000
 const ipHost = 'whois.ripe.net'
@@ -27,23 +27,19 @@ const lookup = domain => {
     return _lookup(ipHost, domain)
   } else {
     let server = null
-    let tld = domain
-    while (tld && !server) {
-      if (Servers[tld] && Servers[tld][0]) {
-        server = Servers[tld][0]
-      }
-      tld = tld.replace(/^.+?(\.|$)/, '')
-    }
-    if (!server) {
-      throw new Error('No whois server is known')
+    let [tld, ...args] = domain.split('.').reverse()
+    if (args.length == 0) throw new Error('Invalid domain')
+
+    if (TLD_SERVER[tld] && TLD_SERVER[tld][0]) {
+      return _lookup(TLD_SERVER[tld][0], domain)
     } else {
-      return _lookup(server, domain)
+      throw new Error('No whois server is known')
     }
   }
 }
 
 const _lookup = (server, domain) => {
-  domain = domain.toLowerCase()
+  domain = domain.toLowerCase().trim()
   const query = domain + '\r\n'
 
   if (typeof server === 'string') {
@@ -62,38 +58,50 @@ const _lookup = (server, domain) => {
     
     let data = ''
     socket.on('data', chunk => data += chunk.replace(/\r/g, ''))
-    socket.once('close', () => resolve(parseRaw(data, domain)))
+    socket.once('close', () => {
+      let result = parseRaw(data, domain)
+      if (result) resolve(result)
+      else reject(new Error('No data'))
+    })
     socket.on('error', error => reject(error))
     socket.on('timeout', () => socket.destroy())
   })
 }
 
 const parseRaw = (data, domain) => {
+  if (!data) return ''
+
   const split = data.split(/\r?\n/)
   const startReg = new RegExp(domain, 'i')
-  const endReg = /^\s*[#%>-]/
+  const notFound = /(Not\s+Found|No\s+Match)/i
+  const copyReg = /Copyright/i
+  const descReg = /Whois\s+(Inaccuracy|Infor|Lookup)/i
+  const otherReg = /^\s*[#%>-]/
 
   let start = null
   let end = null
   let parsed = []
 
   for (let index = 0; index < split.length; index ++) {
-    let line = split[index]
+    let line = split[index].trim()
     // Start with domain name
     if (start == null) {
-      if (startReg.test(line)) start = index
-    }
-    if (start != null && index >= start) {
-      // End with notice
-      if (end == null && endReg.test(line)) {
-        break
+      if (startReg.test(line) || notFound.test(line)) {
+        start = index
+        // Start with multi-line
+        if (line.toLowerCase() === domain) {
+          parsed.push(split[index - 1].trim())
+        }
+        parsed.push(line)
       }
-      parsed.push(line.trim())
+    } else if (index > start) {
+      if (end != null) break
+      // End with copyright, description and other
+      else if (copyReg.test(line) || descReg.test(line) || otherReg.test(line)) break
+      // Up to 1 blank line
+      else if (line == '' && split[index - 1].trim() == '') continue
+      else parsed.push(line.trim())
     }
-  }
-  // Start with multi-line
-  if (parsed.length && parsed[0].toLowerCase() === domain) {
-    parsed.unshift(split[start - 1].trim())
   }
   return parsed.join('\n')
 }
