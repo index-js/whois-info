@@ -12,23 +12,20 @@ const TLD_SERVER = require('./tld.json')
 const timeout = 30000
 const ipHost = 'whois.ripe.net'
 
-const punycode = /[^\0-\x7E]/
-const email = /@/
-
 
 const lookup = domain => {
   return new Promise((resolve, reject) => {
     if (!domain) {
       reject(new Error('Please enter domain name'))
-    } else if (punycode.test(domain)) {
+    } else if (/[^\0-\x7E]/.test(domain)) {
       reject(new Error('Please use the "xn--" format for the Punycode domain'))
-    } else if (email.test(domain)) {
+    } else if (/@/.test(domain)) {
       reject(new Error('Email address not supported'))
     } else if (net.isIP(domain) !== 0) {
       resolve(_lookup(ipHost, domain))
     } else {
       let [tld, ...args] = domain.split('.').reverse()
-      if (args.length == 0) {
+      if (args.length === 0) {
         reject(new Error('Invalid domain'))
       }
 
@@ -72,6 +69,7 @@ const _lookup = (server, domain) => {
 }
 
 const parseRaw = (data, domain) => {
+  if (net.isIP(domain) !== 0) return data
   if (!data) return ''
 
   const split = data.split(/\r?\n/)
@@ -90,6 +88,7 @@ const parseRaw = (data, domain) => {
     // Start with domain name
     if (start == null) {
       if (startReg.test(line) || notFound.test(line)) {
+        line = line.replace(otherReg, '')
         start = index
         // Start with multi-line
         if (line.toLowerCase() === domain) {
@@ -102,7 +101,7 @@ const parseRaw = (data, domain) => {
       // End with copyright, description and other
       else if (copyReg.test(line) || descReg.test(line) || otherReg.test(line)) break
       // Up to 1 blank line
-      else if (line == '' && split[index - 1].trim() == '') continue
+      else if (line === '' && split[index - 1].trim() === '') continue
       else parsed.push(line.trim())
     }
   }

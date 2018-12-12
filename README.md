@@ -11,6 +11,8 @@ $ npm i whois-info
 
 ## Usage
 
+Domain lookup
+
 ``` js
 /*
 * OK
@@ -21,11 +23,20 @@ $ npm i whois-info
 * Error: Connect
 */
 
-;['yanglin.me', 'nomatchdomain.com', 'fedcba.me', 'fedcba.ba', 'nodata.es', 'fedcba.ke'].forEach(domain => {
-  lookup(domain)
-    .then(data => console.log(domain, data.split(/\n/)[0]))
-    .catch(e => console.log(domain, e.message))
-})
+let tests = ['yanglin.me', 'nomatchdomain.com', 'notfounddomain.me', 'nic.ba', 'nic.es', 'nic.ke']
+// ;[...tests].forEach(domain => {
+//   lookup(domain)
+//     .then(data => console.log(domain, data.split(/\n/)[0]))
+//     .catch(e => console.log(domain, e.message))
+// })
+```
+
+IP lookup
+``` js
+let ip = '8.8.8.8'
+lookup(ip)
+  .then(data => console.log(data))
+  .catch(e => console.log(ip, e.message))
 ```
 
 ## Authors
