@@ -1,6 +1,6 @@
 {
   "name": "whois-info",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "whois lookup",
   "main": "index.js",
   "scripts": {
