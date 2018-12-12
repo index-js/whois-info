@@ -17,25 +17,28 @@ const email = /@/
 
 
 const lookup = domain => {
-  if (!domain) {
-    throw new Error('Please enter domain name')
-  } else if (punycode.test(domain)) {
-    throw new Error('Please use the "xn--" format for the Punycode domain')
-  } else if (email.test(domain)) {
-    throw new Error('Email address not supported')
-  } else if (net.isIP(domain) !== 0) {
-    return _lookup(ipHost, domain)
-  } else {
-    let server = null
-    let [tld, ...args] = domain.split('.').reverse()
-    if (args.length == 0) throw new Error('Invalid domain')
-
-    if (TLD_SERVER[tld] && TLD_SERVER[tld][0]) {
-      return _lookup(TLD_SERVER[tld][0], domain)
+  return new Promise((resolve, reject) => {
+    if (!domain) {
+      reject(new Error('Please enter domain name'))
+    } else if (punycode.test(domain)) {
+      reject(new Error('Please use the "xn--" format for the Punycode domain'))
+    } else if (email.test(domain)) {
+      reject(new Error('Email address not supported'))
+    } else if (net.isIP(domain) !== 0) {
+      resolve(_lookup(ipHost, domain))
     } else {
-      throw new Error('No whois server is known')
+      let [tld, ...args] = domain.split('.').reverse()
+      if (args.length == 0) {
+        reject(new Error('Invalid domain'))
+      }
+
+      if (TLD_SERVER[tld] && TLD_SERVER[tld][0]) {
+        resolve(_lookup(TLD_SERVER[tld][0], domain))
+      } else {
+        reject(new Error('No whois server is known'))
+      }
     }
-  }
+  })
 }
 
 const _lookup = (server, domain) => {

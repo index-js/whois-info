@@ -12,12 +12,20 @@ $ npm i whois-info
 ## Usage
 
 ``` js
-const { lookup } = require('whois-info')
+/*
+* OK
+* No Match
+* Not Found
+* Error: Not Supported
+* Error: No Data
+* Error: Connect
+*/
 
-lookup('yanglin.me')
-  .then(data => console.log(data))
-  .catch(e => console.log(e))
-
+;['yanglin.me', 'nomatchdomain.com', 'fedcba.me', 'fedcba.ba', 'nodata.es', 'fedcba.ke'].forEach(domain => {
+  lookup(domain)
+    .then(data => console.log(domain, data.split(/\n/)[0]))
+    .catch(e => console.log(domain, e.message))
+})
 ```
 
 ## Authors
