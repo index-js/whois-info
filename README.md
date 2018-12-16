@@ -1,4 +1,4 @@
-# Whois-js
+# Whois-info
 > Whois lookup
 
 ## Installation
